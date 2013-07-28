@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>C/CGI Test Form</title>
+
+    <script type="text/javascript" src="docs/include/jquery/jquery-1.7.1.min.js"></script>
+    <script type="text/javascript" src="docs/include/jquery-json/jquery.json-2.4.js"></script>
+
+	<style type="text/css">
+		body { font-family: "Segoe UI", Frutiger,Tahoma,Helvetica,"Helvetica Neue", Arial, sans-serif; font-size: 12px; }
+		textarea#data { border: 1px solid #ccc; width: 99%; height: 200px; }
+		button, select { width: 78px; height: 22px; }
+		select { position: absolute; margin-left: 6px; text-align: center; padding-top: 2px; }
+		#spinner { background: url('docs/images/spinner.gif') no-repeat center center; height: 22px; width: 80px; margin: 1px; float: left; }
+		#response { border: 1px dotted #ccc; font-family: monospace; white-space: pre-wrap; width: 99%; }
+	</style>
+
+	<script type="text/javascript">
+
+		$(document).ready(function() {
+
+			$("button#clear").click(function() {
+				$("div#response").html('&nbsp;');
+				$("div#spinner").hide();
+				$("button#submit").show();
+			});
+
+			$("button#submit").click(function() {
+
+				$("div#spinner").show();
+				$("button#submit").hide();
+				$("div#response").html('&nbsp;');
+
+				var postdata = $.param( $.secureEvalJSON( $("textarea#data").val() ) );
+
+			    $.ajax({
+			        type: $("select#submittype").val(),
+			        url: "cgi-bin/test.cgi",
+			        data: postdata,
+			        timeout: 30000,
+			        context: this,
+			        complete: function() {
+			            $("div#spinner").hide();
+			            $("button#submit").show();
+			        },
+			        error: function( objAJAXRequest, strError, errorThrown ) {
+			            $("div#response").html(strError);
+			        },
+			        success: function(data, textStatus, jqXHR) {
+			            $("div#response").html(data);
+			        }
+			    });
+			});
+
+		});
+
+	</script>
+
+</head>
+<body>
+
+	JSON:
+	<textarea id="data">
+{
+   "test1": 123,
+   "test2": "four",
+   "test3": 56789
+}
+	</textarea>
+	<br />
+
+	<button id="submit">SUBMIT</button>
+	<button id="clear">CLEAR</button>
+	<select id="submittype"><option value="post">POST</option><option value="get">GET</option></select>
+	<div id="spinner" style="display: none;">&nbsp;</div>
+	<br />
+
+	<br style="clear: both;" />
+	Response:
+	<div id="response">&nbsp;</div>
+
+</body>
+</html>

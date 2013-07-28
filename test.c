@@ -2,7 +2,12 @@
 #include <string.h> 
 #include <stdlib.h>
 
-//int main (int argc, const char * argv[]) {
+typedef struct {
+    char **key;
+    char **val;
+    int length;
+} parameters;
+
 int main (int argc, char * const argv[], char * envp[] ) {
 
     printf("Content-type: text/plain\n\n");
@@ -52,71 +57,66 @@ int main (int argc, char * const argv[], char * envp[] ) {
     printf("Query string: %s\n", QueryString);
 
     // Parse QUERY STRING
+    char *token_ptr;
+    char *token;
+    int x = 0;
 
-    char * pair;
-    char * key;
-    double value;
+    // Instantiate the query data structure
+    parameters query;
+    query.length = 0;
+    query.key = 0;
+    query.val = 0;
 
-    /*
-    if ( QueryString && strlen(QueryString) > 0 ) {
+    // Tokenize the query string
+    token = strtok_r(QueryString, "&", &token_ptr);
+   
+    /* walk through other tokens */
+    while ( token != NULL ) {
 
-        pair = strtok(QueryString, "&");
-        free(pair);
-        //while (pair) {
+        // Parse fieldset pairs
+        char *pair_ptr;
+        char *pair = malloc(4096);
 
-        //    printf("pair: %s\n",pair);
-        //}
+        // Resize and reallocate the query structure
+        x++;
+        int FieldSetSize =  (x * sizeof(char*));
+        query.key = realloc(query.key, FieldSetSize);
+        query.val = realloc(query.val, FieldSetSize);
+        query.key[x] = (char *) malloc(1);
+        query.val[x] = (char *) malloc(1);
 
-        /*
-        while (pair) {
-            key = (char *) malloc(strlen(pair)+1);
-            sscanf(pair, "%[^=]=%lf", key, &value);
-            if ( !strcmp(key, "lat") ) {
-                lat = value;
-            } else if (!strcmp(key, "lng") ) {
-                lng = value;
+        // Reallocate and copy the token
+        pair = (char*) realloc(pair, strlen(token));
+        strncpy(pair, token, strlen(token));
+        query.length = x;
+
+        // Tokenize the first token string
+        pair = strtok_r(token, "=", &pair_ptr);
+
+        // Reallocate and store the key
+        query.key[x] = (char*) realloc(query.key[x], strlen(pair));
+        strncpy(query.key[x], pair, strlen(pair));
+
+        while ( pair != NULL ) {
+
+            // Retrieve the value
+            pair = strtok_r(NULL, "=", &pair_ptr);
+
+            if ( pair != NULL ) {
+                // Reallocate and store the value
+                query.val[x] = (char*) realloc(query.val[x], strlen(pair));
+                strncpy(query.val[x], pair, strlen(pair));
             }
-            free(key);
-            pair = strtok((char *)0, "&");
         }
-        */
-    /*
+        printf("query object params (key: %s, val: \"%s\") for position %d\n", query.key[x], query.val[x], x);
+
+        // Get the next token pair
+        free(pair);
+        token = strtok_r(NULL, "&", &token_ptr);
     }
-    */
 
     free(Method);
     free(QueryString);
 
-    return 0;
-/*
-    len++;
-    //int *postdata;
-    //postdata = malloc(len + 1);
-
-    //if (!postdata) { 
-    //    printf("Error: no data\n");
-    //    return(1);
-    //}
-
-    //fgets(postdata, len + 1, stdin);
-    /* work with postdata */
-/*
-    printf("<table frame='box' rules='all' cellpadding='5' >\n<tr><td>data... bytes = %d</td>\n<td>", len );
-
-    int i = 0;
-
-    for ( i = 0 ; i < len ; ++i ) { 
-        char c = fgetc(stdin) ; 
-        if (c=='\n') printf("<br />") ; 
-        else printf( "%c", c ) ; 
-    }
-
-    printf("</td>\n</tr>\n") ; 
-    printf("</table>\n</body>\n");
-    printf("</html>\n");
-    fflush(stdout) ; 
-
-    //free(postdata);
-*/
     return 0;
 }

@@ -89,16 +89,16 @@ void parameterize_querystring(char *querystring, parameters *qs) {
     // Walk through each token pair
     while ( token != NULL ) {
 
+        // Tokenize each key/val pair
         //printf("token: %s\n", token);
-
-        // Tokenize the first token string
         char *key, *val, *pair_ptr;
         key = strtok_r(token, "=", &pair_ptr);
         val = strtok_r(NULL, "=", &pair_ptr);
 
         if ( val == NULL ) {
-            //printf("key: %s, val: %s\n", key, "");
-            add_parameter(qs, key, "");
+            char noval[] = "";
+            //printf("key: %s, val: %s\n", key, noval);
+            add_parameter(qs, key, noval);
         }
         else {
             //printf("key: %s, val: %s\n", key, val);
@@ -158,6 +158,7 @@ void get_parameter_value_by_key(parameters *qs, char *key, char *val) {
 
 void free_parameters(parameters *qs) {
 
+    // Loop through and free all allocated resources
     int i;
 
     for (i=1; i<=qs->length; i++) {
@@ -181,9 +182,10 @@ void testing(parameters *qs) {
     }
 
     // Retrieve a value by its key
-    char *test = calloc(255, 1);
+    char *test = (char *) calloc(255, 1);
+    char key_name[] = "test2";
 
-    get_parameter_value_by_key(qs, "test2", test);
+    get_parameter_value_by_key(qs, key_name, test);
 
     printf("key 'test2' has value: '%s'", test);
     free(test);

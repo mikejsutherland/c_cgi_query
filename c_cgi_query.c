@@ -1,5 +1,5 @@
 // c_cgi_query
-//   - simplied c based cgi application for dynamically storing and processing http query data
+//   - simplied c based cgi application for dynamically processing and storing http query data
 // 
 // Copyright 2013 Michael Sutherland
 // mike@codesmak.com
@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <string.h> 
 #include <stdlib.h>
-#include <c_cgi_query.h>
+#include "c_cgi_query.h"
 
 int main (int argc, char * const argv[], char * envp[] ) {
 
@@ -180,7 +180,7 @@ void testing(parameters *qs) {
         printf("%d) query object params (key: %s, val: \"%s\")\n", i, qs->key[i], qs->val[i]);
     }
 
-    // Retrieve a single keys value
+    // Retrieve a value by its key
     char *test = calloc(255, 1);
 
     get_parameter_value_by_key(qs, "test2", test);

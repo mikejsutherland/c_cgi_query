@@ -65,15 +65,13 @@ int main (int argc, char * const argv[], char * envp[] ) {
     // Tokenize the query string and store it
     parameterize_querystring(QueryString, &qs);
 
-    // Clean up
-    free(QueryString);
-
     // ***************************************
     // Testing
     // *************************************** 
     testing(&qs);
 
     // Clean up
+    free(QueryString);
     free_parameters(&qs);
     fflush(stdout);
 

@@ -1,19 +1,14 @@
+// c_cgi_query
+//   - simplied c based cgi application for dynamically storing and processing http query data
+// 
+// Copyright 2013 Michael Sutherland
+// mike@codesmak.com
+//
+
 #include <stdio.h>
 #include <string.h> 
 #include <stdlib.h>
-
-typedef struct {
-    char **key;
-    char **val;
-    int length;
-} parameters;
-
-void parameterize_querystring(char *, parameters *);
-void init_parameters(parameters *);
-void add_parameter(parameters *, char *, char *);
-void get_parameter_value_by_key(parameters *, char *, char *);
-void free_parameters(parameters *);
-void testing(parameters *);
+#include <c_cgi_query.h>
 
 int main (int argc, char * const argv[], char * envp[] ) {
 
@@ -77,7 +72,6 @@ int main (int argc, char * const argv[], char * envp[] ) {
     // Testing
     // *************************************** 
     testing(&qs);
-
 
     // Clean up
     free_parameters(&qs);

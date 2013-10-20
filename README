@@ -1,0 +1,8 @@
+About
+----------------------------
+c_cgi_query is above all else a learning exercise, consisting of a simplied c
+based cgi application for dynamically processing and storing http query data.
+
+How to compile
+----------------------------
+gcc c_cgi_query.c -o cgi-bin/c_cgi_query.cgi

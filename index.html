@@ -22,9 +22,14 @@
 		$(document).ready(function() {
 
 			$("button#clear").click(function() {
-				$("div#response").html('&nbsp;');
-				$("div#spinner").hide();
-				$("button#submit").show();
+				reset();
+			});
+
+			$("textarea#data").focus(function() {
+				if ( $(this).css('background-color').length > 0 ) {
+					$("textarea#data").css("background-color","");
+					$("textarea#data").css({ "border-color": "#ccc" });
+				}
 			});
 
 			$("button#submit").click(function() {
@@ -33,7 +38,17 @@
 				$("button#submit").hide();
 				$("div#response").html('&nbsp;');
 
-				var postdata = $.param( $.secureEvalJSON( $("textarea#data").val() ) );
+				var postdata;
+				try { 
+					postdata = $.param( $.secureEvalJSON( $("textarea#data").val() ) );
+				}
+				catch (e) {
+					reset();
+					$("textarea#data").css({ "border-color": "#cc000d" });
+					$("textarea#data").css({ "background-color": "#fbaaac" });
+					$("div#response").html("JSON error: "+e);
+					return;
+				}
 
 			    $.ajax({
 			        type: $("select#submittype").val(),
@@ -55,6 +70,14 @@
 			});
 
 		});
+
+		function reset() {
+			$("textarea#data").css("background-color","");
+			$("textarea#data").css({ "border-color": "#ccc" });
+			$("div#response").html('&nbsp;');
+			$("div#spinner").hide();
+			$("button#submit").show();
+		}
 
 	</script>
 

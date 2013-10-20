@@ -8,12 +8,18 @@ typedef struct {
     int length;
 } parameters;
 
+void parameterize_querystring(char *, parameters *);
+void init_parameters(parameters *);
+void add_parameter(parameters *, char *, char *);
+void get_parameter_value_by_key(parameters *, char *, char *);
+void free_parameters(parameters *);
+void testing(parameters *);
+
 int main (int argc, char * const argv[], char * envp[] ) {
 
     printf("Content-type: text/plain\n\n");
 
     char *QueryString;
-    char *Method;
     int length = 0;
 
     if ( getenv( "REQUEST_METHOD" ) == 0 ) {
@@ -24,8 +30,10 @@ int main (int argc, char * const argv[], char * envp[] ) {
     else {
 
         // Allocate an initial size for the query string
-        QueryString = (char *) malloc(4096);
-        Method = (char *) malloc(5);
+        QueryString = (char *) calloc(4096, 1);
+        if ( QueryString == NULL ) {
+            fprintf(stderr, "%s\n", "Unable to allocate memory");
+        }
 
         // POST Method
         if ( strcmp( getenv("REQUEST_METHOD"), "POST") == 0 ) {
@@ -37,7 +45,6 @@ int main (int argc, char * const argv[], char * envp[] ) {
             }
             length = atoi(getenv("CONTENT_LENGTH"));
             QueryString = (char *) realloc(QueryString, (length+1));
-            Method = "POST";
 
             fread(QueryString , length, 1, stdin);
         }
@@ -46,77 +53,144 @@ int main (int argc, char * const argv[], char * envp[] ) {
 
             length = strlen(getenv("QUERY_STRING"));
             QueryString = (char *) realloc(QueryString, (length+1));
-            Method = "GET";
 
             strncpy(QueryString, getenv("QUERY_STRING"), length+1);
         }
 
     }
 
-    printf("The %s query string is: %d chars long.\n", Method, length);
+    printf("The query string is: %d chars long.\n", length);
     printf("Query string: %s\n", QueryString);
+    printf("--------------------------------------------------------\n");
 
-    // Parse QUERY STRING
-    char *token_ptr;
-    char *token;
-    int x = 0;
+    // Instantiate the query data object
+    parameters qs;
+    init_parameters(&qs);
 
-    // Instantiate the query data structure
-    parameters query;
-    query.length = 0;
-    query.key = 0;
-    query.val = 0;
+    // Tokenize the query string and store it
+    parameterize_querystring(QueryString, &qs);
 
-    // Tokenize the query string
-    token = strtok_r(QueryString, "&", &token_ptr);
-   
-    /* walk through other tokens */
-    while ( token != NULL ) {
-
-        // Parse fieldset pairs
-        char *pair_ptr;
-        char *pair = malloc(4096);
-
-        // Resize and reallocate the query structure
-        x++;
-        int FieldSetSize =  (x * sizeof(char*));
-        query.key = realloc(query.key, FieldSetSize);
-        query.val = realloc(query.val, FieldSetSize);
-        query.key[x] = (char *) malloc(1);
-        query.val[x] = (char *) malloc(1);
-
-        // Reallocate and copy the token
-        pair = (char*) realloc(pair, strlen(token));
-        strncpy(pair, token, strlen(token));
-        query.length = x;
-
-        // Tokenize the first token string
-        pair = strtok_r(token, "=", &pair_ptr);
-
-        // Reallocate and store the key
-        query.key[x] = (char*) realloc(query.key[x], strlen(pair));
-        strncpy(query.key[x], pair, strlen(pair));
-
-        while ( pair != NULL ) {
-
-            // Retrieve the value
-            pair = strtok_r(NULL, "=", &pair_ptr);
-
-            if ( pair != NULL ) {
-                // Reallocate and store the value
-                query.val[x] = (char*) realloc(query.val[x], strlen(pair));
-                strncpy(query.val[x], pair, strlen(pair));
-            }
-        }
-        printf("query object params (key: %s, val: \"%s\") for position %d\n", query.key[x], query.val[x], x);
-
-        // Get the next token pair
-        free(pair);
-        token = strtok_r(NULL, "&", &token_ptr);
-    }
-
-    free(Method);
+    // Clean up
     free(QueryString);
 
+    // ***************************************
+    // Testing
+    // *************************************** 
+    testing(&qs);
+
+
+    // Clean up
+    free_parameters(&qs);
+    fflush(stdout);
+
     return 0;
+}
+
+void parameterize_querystring(char *querystring, parameters *qs) {
+
+    // Tokenize the query string
+    char *token, *token_ptr;
+    token = strtok_r(querystring, "&", &token_ptr);
+   
+    // Walk through each token pair
+    while ( token != NULL ) {
+
+        //printf("token: %s\n", token);
+
+        // Tokenize the first token string
+        char *key, *val, *pair_ptr;
+        key = strtok_r(token, "=", &pair_ptr);
+        val = strtok_r(NULL, "=", &pair_ptr);
+
+        if ( val == NULL ) {
+            //printf("key: %s, val: %s\n", key, "");
+            add_parameter(qs, key, "");
+        }
+        else {
+            //printf("key: %s, val: %s\n", key, val);
+            add_parameter(qs, key, val);
+        }
+
+        // Get the next token pair
+        token = strtok_r(NULL, "&", &token_ptr);
+    }
+}
+
+void init_parameters(parameters *qs) {
+
+    // Initialize the parameter object if not already
+    qs->length = 0;
+
+    qs->key = (char **) calloc(1, 1);
+    qs->val = (char **) calloc(1, 1);
+
+    qs->key[ qs->length ] = (char *) calloc(1, 1);
+    qs->val[ qs->length ] = (char *) calloc(1, 1);
+}
+
+void add_parameter(parameters *qs, char *key, char *val) {
+
+    // Determine the size required to store the key/val
+    int key_s = strlen(key) +1;
+    int val_s = strlen(val) +1;
+
+    // Resize the parameter object
+    qs->length++;
+    qs->key = (char **) realloc(qs->key, qs->length);
+    qs->val = (char **) realloc(qs->val, qs->length);
+
+    // Allocate space required to store the key/val
+    qs->key[ qs->length ] = (char *) calloc(key_s, 1);
+    qs->val[ qs->length ] = (char *) calloc(val_s, 1);
+
+    // Store the key/val
+    strncpy(qs->key[ qs->length ], key, key_s);
+    strncpy(qs->val[ qs->length ], val, val_s);
+}
+
+void get_parameter_value_by_key(parameters *qs, char *key, char *val) {
+
+    // Loop through each key until a match is found
+    int i;
+
+    for (i=1; i<=qs->length; i++) {
+        if ( !strcmp(qs->key[i], key) ) {
+            val = (char *) realloc(val, strlen(qs->val[i])+1);
+            strncpy(val, qs->val[i], strlen(qs->val[i]));
+            break;
+        }
+    }
+}
+
+void free_parameters(parameters *qs) {
+
+    int i;
+
+    for (i=1; i<=qs->length; i++) {
+        free(qs->key[i]);
+        free(qs->val[i]);
+    }
+
+    free(qs->key);
+    free(qs->val);
+}
+
+void testing(parameters *qs) {
+
+    // Print out the key/value pairs
+    printf("parameters detected: %d\n", qs->length);
+
+    int i;
+
+    for (i=1; i<=qs->length; i++) {
+        printf("%d) query object params (key: %s, val: \"%s\")\n", i, qs->key[i], qs->val[i]);
+    }
+
+    // Retrieve a single keys value
+    char *test = calloc(255, 1);
+
+    get_parameter_value_by_key(qs, "test2", test);
+
+    printf("key 'test2' has value: '%s'", test);
+    free(test);
 }

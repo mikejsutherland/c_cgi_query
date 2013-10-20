@@ -182,11 +182,11 @@ void testing(parameters *qs) {
     }
 
     // Retrieve a value by its key
-    char *test = (char *) calloc(255, 1);
     char key_name[] = "test2";
+    char *key_val = (char *) calloc(255, 1);
 
-    get_parameter_value_by_key(qs, key_name, test);
+    get_parameter_value_by_key(qs, key_name, key_val);
+    printf("key '%s' has value: '%s'\n", key_name, key_val);
 
-    printf("key 'test2' has value: '%s'", test);
-    free(test);
+    free(key_val);
 }
